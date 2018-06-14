@@ -5,4 +5,8 @@ WELCOME_TEXT = """\
 \t To view all the commands available use --help flag
 
 \t                          @CloudCV Origami
+
+\t                    x--------------------------x
 """
+
+DEFAULT_API_SERVER_PORT = 9002

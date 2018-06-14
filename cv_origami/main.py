@@ -1,16 +1,18 @@
 import click
 
-from click import echo
-
 from .constants import WELCOME_TEXT
+from .api import run_server
 
 
 @click.group(invoke_without_command=True)
 @click.pass_context
 def main(ctx):
     """
-    Main function for the daemon. Checks if there is no subcommand
-    in the current context and echo the welcome text if not.
+    Origami daemon is an application which deploys and manages demos on
+    CloudCV servers.
     """
     if not ctx.invoked_subcommand:
-        echo(WELCOME_TEXT)
+        click.echo(WELCOME_TEXT)
+
+
+main.add_command(run_server)
