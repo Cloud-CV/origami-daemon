@@ -1,4 +1,5 @@
 import click
+import logging
 from flask import Flask
 from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
@@ -12,6 +13,13 @@ server = HTTPServer(WSGIContainer(app))
 
 @app.route('/', methods=['GET'])
 def welcome_text():
+    """
+    Returns the welcome text when a GET request is made to
+    api root.
+
+    Returns:
+        WELCOME_TEXT (str): Origami description text.
+    """
     return WELCOME_TEXT
 
 
@@ -28,5 +36,5 @@ def run_server(port):
         port (int): Port for API server to listen on
     """
     server.listen(port)
-    print('API server started on port : {}'.format(port))
+    logging.info('API server started on port : {}'.format(port))
     IOLoop.instance().start()
