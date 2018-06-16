@@ -6,6 +6,8 @@ This is a long running daemon process which deals with demo deployment and manag
 
 ## Setup for development
 
+To get started with the development follow the following steps.
+
 ```sh
 $ git clone git@github.com:Cloud-CV/origami-daemon.git
 $ cd origami-daemon
@@ -16,3 +18,7 @@ $ pip install -e .
 # Start using cv_origami
 $ cv_origami
 ```
+
+## Wiki
+
+* New Demo Creation pipeline ([Wiki link](https://github.com/Cloud-CV/origami-daemon/wiki))
