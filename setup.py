@@ -11,7 +11,8 @@ install_requires = [
   'click==6.7',
   'flask==1.0.2 ',
   'requests==2.18.4',
-  'tornado==5.0.2'
+  'tornado==5.0.2',
+  'six==1.11.0',
 ]
 
 setup(

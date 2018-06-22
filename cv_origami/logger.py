@@ -27,9 +27,7 @@ class OrigamiLogger(object):
     file_log_level = logging.INFO
     console_log_level = logging.INFO
 
-    def __init__(self,
-            file_log_level=None,
-            console_log_level=None):
+    def __init__(self, file_log_level=None, console_log_level=None):
         """
         Creates an instance of Origami logger.
 
@@ -85,7 +83,7 @@ class OrigamiLogger(object):
         """
         console_formatter = logging.Formatter(
             fmt='%(asctime)s | %(filename)s | %(levelname)s |'
-                ' %(name)s | %(message)s',
+            ' %(name)s | %(message)s',
             datefmt="%Y-%m-%d %H:%M:%S")
 
         return console_formatter
@@ -123,8 +121,8 @@ class OrigamiLogger(object):
         """
         file_formatter = logging.Formatter(
             fmt='%(levelname)s | %(name)s | '
-                '%(asctime)s | %(filename)s | %(lineno)d | '
-                '%(message)s',
+            '%(asctime)s | %(filename)s | %(lineno)d | '
+            '%(message)s',
             datefmt="%Y-%m-%d %H:%M:%S")
 
         return file_formatter
@@ -192,8 +190,8 @@ class OrigamiLogger(object):
         if not level:
             level = self.file_log_level
 
-        file_handler = logging.FileHandler(get_log_path(DEFAULT_LOG_FILE),
-            mode=LOGS_FILE_MODE_REQ)
+        file_handler = logging.FileHandler(
+            get_log_path(DEFAULT_LOG_FILE), mode=LOGS_FILE_MODE_REQ)
         file_handler.setLevel(level)
         file_handler.setFormatter(self._get_file_formatter())
 
