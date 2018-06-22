@@ -21,4 +21,6 @@ DEFAULT_LOG_FILE = 'origami.log'
 REQUIREMENTS_FILE = 'requirements.txt'
 ENTRYPOINT_PYTHON_MODULE = 'main.py'
 DOCKERFILE_FILE = 'Dockerfile'
-ORIGAMI_ENV_FILE = '.origami'
+ORIGAMI_ENV_FILE = 'origami.env'
+
+ORIGAMI_DB_NAME = 'origami.db'

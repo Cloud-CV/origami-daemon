@@ -11,6 +11,7 @@ from .constants import DEFAULT_API_SERVER_PORT, WELCOME_TEXT
 from .utils.validation import validate_demo_bundle_zip, \
     preprocess_demo_bundle_zip
 from .exceptions import InvalidDemoBundleException, OrigamiConfigException
+from . import tasks
 
 app = Flask(__name__)
 server = HTTPServer(WSGIContainer(app))
@@ -26,6 +27,32 @@ def trigger_deploy(demo_id):
     * For now we are considering only local deployments so we are assuming
     that both the origami_daemon and origami_server are running on the same
     server so origami server can give the local path to execute the build.
+
+    curl -X POST 127.0.0.1:9002/deploy_trigger/ff90c8 --data "bundle_path=/tmp/test.zip"
+
+    Possible responses:
+
+    200 OK
+    {
+      'response': 'BundleValidated',
+      'message': 'Deploy has been triggred for bundle : /ff90c8, checks stats'
+    }
+
+    400 BAD_REQUEST
+    {
+      'response': 'InvalidRequestParameters',
+      'message': 'Required parameters : bundle_path and demo_id'
+    }
+
+    400 BAD_REQUEST
+    {
+      'response': 'InvalidDemoBundle',
+      'message': 'The demo bundle provided is not valid',
+      'reason': 'requirements.txt was not valid'
+    }
+
+    Args:
+        demo_id: Id of the demo to be deployed
     """
     try:
         # six.string_types returns a tuple which is fine for isinstance but here
@@ -40,8 +67,9 @@ def trigger_deploy(demo_id):
             demo_dir = preprocess_demo_bundle_zip(bundle_path, demo_id)
 
             # Demo bundle has been verified and preprocessed
-            # Create a model and start working on deployment.
-            # model = Model(demo_id, demo_dir)
+            # Start a worker process to deploy the demo, this must be
+            # asynchronous.
+            tasks.deploy_demo.delay(demo_id, demo_dir)
 
             return jsonify({
                 'response':
@@ -50,6 +78,7 @@ def trigger_deploy(demo_id):
                 'Deploy has been triggred for bundle : {}, checks stats'.format(
                     demo_dir)
             }), 200
+
         else:
             logging.warn('Bundle Path is not provided in POST parameters')
             return jsonify({
