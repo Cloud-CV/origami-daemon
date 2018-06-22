@@ -5,7 +5,7 @@ class OrigamiException(Exception):
     STATUS_CODE = 1
 
     def __init__(self, message=''):
-        super().__init__("OrigamiException[{0}] => {1}".format(
+        super().__init__("CV_OrigamiException[{0}] => {1}".format(
             self.STATUS_CODE, message))
 
 

@@ -4,7 +4,7 @@ import tempfile
 import zipfile
 
 from ..constants import LOGS_DIR, LOGS_FILE_MODE_REQ, ORIGAMI_CONFIG_DIR, \
-    ORIGAMI_DEMOS_DIRNAME
+    ORIGAMI_DEMOS_DIRNAME, ORIGAMI_DB_NAME
 from ..exceptions import OrigamiConfigException
 
 
@@ -102,3 +102,10 @@ def clean_directory(directory):
     if os.path.isdir(directory):
         shutil.rmtree(
             directory, ignore_errors=False, onerror=panic_invaild_bootstrap)
+
+
+def get_origami_database_path():
+    """
+    Returns the path to database for origami_daemon.
+    """
+    return os.path.join(ORIGAMI_CONFIG_DIR, ORIGAMI_DB_NAME)
