@@ -15,6 +15,7 @@ install_requires = [
   'six==1.11.0',
   'peewee==3.5.0',
   'celery==4.2.0',
+  'docker==3.4.0',
 ]
 
 setup(
