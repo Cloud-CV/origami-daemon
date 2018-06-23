@@ -4,6 +4,7 @@ except ImportError:
     # For pip version >= 10
     from pip._internal.req import parse_requirements
 
+import logging
 import os
 import zipfile
 
@@ -11,7 +12,43 @@ from .file import get_model_bundles_base_dir, extract_zip_to_dir, \
     clean_directory
 from ..exceptions import InvalidDemoBundleException, OrigamiConfigException
 from ..constants import REQUIREMENTS_FILE, ENTRYPOINT_PYTHON_MODULE, \
-    DOCKERFILE_FILE, ORIGAMI_ENV_FILE
+    DOCKERFILE_FILE, ORIGAMI_ENV_FILE, BUNDLE_ZIP_MAX_COMPRESSED_SIZE, \
+    BUNDLE_ZIP_MAX_UNCOMPRESSED_SIZE
+
+
+def check_if_zip_ok(zip_path):
+    """
+    Check if the ZIP corresponding zip_path is valid.
+
+    Args:
+        zip_path (str): Path to the zip to check.
+
+    Returns:
+        (bool): Boolean corresponding to validity
+    """
+    try:
+        if os.path.isabs(zip_path) and os.access(
+                zip_path, os.R_OK) and zipfile.is_zipfile(zip_path):
+
+            zip_ref = zipfile.ZipFile(zip_path, 'r')
+            info_list = zip_ref.infolist()
+
+            uncompressed_size = sum([zinfo.file_size for zinfo in info_list])
+            compressed_size = sum([zinfo.compress_size for zinfo in info_list])
+
+            zip_ref.close()
+
+            if uncompressed_size <= BUNDLE_ZIP_MAX_UNCOMPRESSED_SIZE and \
+                compressed_size <= BUNDLE_ZIP_MAX_COMPRESSED_SIZE:
+
+                logging.info('Bundle zip {} seems to be fine'.format(zip_path))
+                return True
+        else:
+            logging.warn('Invalid zip path : {}'.format(zip_path))
+    except Exception as e:
+        logging.warn('Exception while validating zip {} : {}', zip_path, e)
+
+    return False
 
 
 def validate_requirements_file(file_path):
@@ -128,8 +165,7 @@ def validate_demo_bundle_zip(bundle_path):
     Exceptions:
         InvalidDemoBundleException: The demo bundle is not valid.
     """
-    if os.path.isabs(bundle_path) and zipfile.is_zipfile(
-            bundle_path) and os.access(bundle_path, os.R_OK):
+    if check_if_zip_ok(bundle_path):
 
         z = zipfile.ZipFile(bundle_path).namelist()
         files = [os.path.basename(k) for k in z]
