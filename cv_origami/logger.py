@@ -111,7 +111,8 @@ class OrigamiLogger(object):
 
         ```
         INFO | root | 2018-06-15 11:22:02 | main.py | 17 | This is an info log
-        WARNING | root | 2018-06-15 11:22:02 | main.py | 18 | This is a warning log
+        WARNING | root | 2018-06-15 11:22:02 | main.py | 18 | This is a warning
+            log
         ERROR | root | 2018-06-15 11:22:02 | main.py | 19 | This is an error log
         DEBUG | root | 2018-06-15 11:22:02 | main.py | 20 | This is an error log
         ```
@@ -135,7 +136,7 @@ class OrigamiLogger(object):
         not to bloat the console. If a more verbose console log is needed send
         the ``verbose`` parameter as ``True``
 
-        For this to work properly with custom formatter ``CustomConsoleFormatter``
+        For this to work properly with custom formatter `CustomConsoleFormatter`
         like in the case of verbose=False file_handlers should be before
         console_handlerssince FileHandler inherits from StreamHandler which
         conflicts the log message format in FileLogger.
