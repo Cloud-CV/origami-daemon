@@ -27,9 +27,11 @@ class DeployedDemos(BaseModel):
     * demo_id: Demo unique ID provided by origami_server
     * container_id: container ID corresponding to demo deployed
     * image_id: Image on which the container is based.
-    * port: Each demo exposes one and only one PORT which should be reported here
+    * port: Each demo exposes one and only one PORT which should be reported
+        here
     * status: Status for the deployement of demo.
-        - It can be one of running, stopped, redeploying, deploying, empty, error
+        - It can be one of running, stopped, redeploying, deploying, empty,
+            error
     * timestamp: Timestamp corresponding to creation of container.
     """
     demo_id = CharField(unique=True, null=False)

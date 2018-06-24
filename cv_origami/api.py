@@ -32,7 +32,8 @@ def trigger_deploy(demo_id):
     that both the origami_daemon and origami_server are running on the same
     server so origami server can give the local path to execute the build.
 
-    curl -X POST 127.0.0.1:9002/deploy_trigger/ff90c8 --data "bundle_path=/tmp/test.zip"
+    curl -X POST 127.0.0.1:9002/deploy_trigger/ff90c8 --data "bundle_path=
+        /tmp/test.zip"
 
     Possible responses:
 
