@@ -21,3 +21,11 @@ class InvalidDemoBundleException(OrigamiException):
     Bundled zip provided by user or by server is not valid.
     """
     STATUS_CODE = 200
+
+
+class OrigamiDockerConnectionError(OrigamiException):
+    """
+    Error when origami throws an exception when trying to connect
+    or use docker.
+    """
+    STATUS_CODE = 300
