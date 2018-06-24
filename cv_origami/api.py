@@ -1,15 +1,19 @@
 import click
 import logging
-from flask import Flask, request, jsonify
 import six
 import sys
+import os
+
+from flask import Flask, request, jsonify
 from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 
-from .constants import DEFAULT_API_SERVER_PORT, WELCOME_TEXT
+from .constants import DEFAULT_API_SERVER_PORT, WELCOME_TEXT, \
+    ORIGAMI_CONFIG_DIR, ORIGAMI_DB_NAME
 from .utils.validation import validate_demo_bundle_zip, \
     preprocess_demo_bundle_zip
+from .utils.file import validate_directory_access
 from .exceptions import InvalidDemoBundleException, OrigamiConfigException
 from . import tasks
 
@@ -126,10 +130,36 @@ def configure_flask_logging():
     It is handled accordingly the global OrigamiLogger which was
     setup in the __init__.py
     """
+    logging.info('Setting up logger for the flask server')
     logger = logging.getLogger()
     handlers = logger.handlers
 
     app.logger.handlers = handlers
+
+
+def configure_origami_db(base_dir):
+    db_path = os.path.join(base_dir, ORIGAMI_DB_NAME)
+    if not os.path.exists(db_path):
+        logging.warn('No database found, creating new.')
+        from .database import bootstrap_db
+        bootstrap_db()
+
+
+def run_origami_bootsteps():
+    logging.info('Running origami bootsteps')
+    origami_config_dir = os.path.join(os.environ['HOME'], ORIGAMI_CONFIG_DIR)
+    if not os.path.isdir(origami_config_dir):
+        logging.info('Config directory does not exist, creating...')
+        os.makedirs(origami_config_dir, mode=0o755, exist_ok=True)
+
+    if not validate_directory_access(origami_config_dir, 'w+'):
+        logging.error(
+            'Permissions are not valid for {}'.format(origami_config_dir))
+        sys.exit(1)
+
+    configure_flask_logging()
+    configure_origami_db(origami_config_dir)
+    logging.info('Bootsteps completed...')
 
 
 @click.command()
@@ -145,6 +175,6 @@ def run_server(port):
         port (int): Port for API server to listen on
     """
     server.listen(port)
-    configure_flask_logging()
+    run_origami_bootsteps()
     logging.info('API server started on port : {}'.format(port))
     IOLoop.instance().start()

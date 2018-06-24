@@ -70,3 +70,7 @@ def get_a_free_port():
         else:
             port += 1
     return port
+
+
+def bootstrap_db():
+    db.create_tables([DeployedDemos, Logs])
