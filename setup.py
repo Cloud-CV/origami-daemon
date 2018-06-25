@@ -13,6 +13,8 @@ install_requires = [
   'requests==2.18.4',
   'tornado==5.0.2',
   'six==1.11.0',
+  'peewee==3.5.0',
+  'celery==4.2.0',
 ]
 
 setup(
