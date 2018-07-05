@@ -31,8 +31,8 @@ class Demos(BaseModel):
     * port: Each demo exposes one and only one PORT which should be reported
         here
     * status: Status for the deployement of demo.
-        - It can be one of running, stopped, redeploying, deploying, empty,
-            error
+        - It can be one of running, paused, restarting, exited, redeploying,
+            deploying, error
     * timestamp: Timestamp corresponding to creation of container.
     """
     demo_id = CharField(unique=True, null=False)

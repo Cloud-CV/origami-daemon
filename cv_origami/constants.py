@@ -22,6 +22,7 @@ REQUIREMENTS_FILE = 'requirements.txt'
 ENTRYPOINT_PYTHON_MODULE = 'main.py'
 DOCKERFILE_FILE = 'Dockerfile'
 ORIGAMI_ENV_FILE = 'origami.env'
+DEMO_SETUP_FILE = 'setup.sh'
 
 ORIGAMI_DB_NAME = 'origami.db'
 

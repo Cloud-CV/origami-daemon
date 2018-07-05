@@ -11,7 +11,7 @@ from .file import get_model_bundles_base_dir, extract_zip_to_dir, \
     clean_directory
 from ..exceptions import InvalidDemoBundleException, OrigamiConfigException
 from ..constants import REQUIREMENTS_FILE, ENTRYPOINT_PYTHON_MODULE, \
-    DOCKERFILE_FILE, ORIGAMI_ENV_FILE
+    DOCKERFILE_FILE, ORIGAMI_ENV_FILE, DEMO_SETUP_FILE
 
 
 def validate_requirements_file(file_path):
@@ -34,7 +34,7 @@ def validate_requirements_file(file_path):
             requirements.append(r.req)
         if not requirements:
             raise InvalidDemoBundleException("Requirements file is empty.")
-    except Exception as e:
+    except Exception:
         raise InvalidDemoBundleException("Requirements file is not valid")
 
 
@@ -74,6 +74,20 @@ def validate_origami_env_file(file_path):
             raise InvalidDemoBundleException("origami env file is invalid")
 
 
+def check_setup_file(file_path):
+    """
+    Check for the setup.sh file in the bundled zip, if the file does not exist
+    it creates a dummy script and add ``exit 0;`` to it so that it gracefully
+    executes.
+
+    If the file exist in the bundle then change the permisssions of the script
+    to make it executable.
+    """
+    if not os.path.exists(file_path):
+        open(file_path, 'w').write('exit 0;')
+    os.chmod(file_path, 0o755)
+
+
 def preprocess_demo_bundle_zip(bundle_path, demo_id):
     """
     This function preprocesses the demo bundle zip. It takes the path to
@@ -104,6 +118,7 @@ def preprocess_demo_bundle_zip(bundle_path, demo_id):
     validate_requirements_file(os.path.join(demo_dir, REQUIREMENTS_FILE))
     validate_dockerfile(os.path.join(demo_dir, DOCKERFILE_FILE))
     validate_origami_env_file(os.path.join(demo_dir, ORIGAMI_ENV_FILE))
+    check_setup_file(os.path.join(demo_dir, DEMO_SETUP_FILE))
 
     return demo_dir
 

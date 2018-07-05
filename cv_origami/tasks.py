@@ -128,3 +128,23 @@ def deploy_demo(demo_id, demo_dir):
         demo.status = 'error'
 
     demo.save()
+
+
+def update_demo_status(demo_id):
+    logging.info(
+        'Checking the current status of demo with demo_id {}'.format(demo_id))
+    demo = Demos.get_or_none(Demos.demo_id == demo_id)
+    if demo and demo.container_id:
+        try:
+            container = docker_client.containers.get(demo.container_id)
+            demo.status = container.status
+        except NotFound:
+            demo.status = 'empty'
+        except APIError as e:
+            demo.status = 'error'
+
+        demo.save()
+        logging.info('Current status of demo for demo_id {} :: {}'.format(
+            demo_id, demo.status))
+
+        return demo.status

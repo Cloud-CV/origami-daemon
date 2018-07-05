@@ -17,7 +17,6 @@ from .utils.file import validate_directory_access
 from .exceptions import InvalidDemoBundleException, OrigamiConfigException, \
     OrigamiDockerConnectionError
 from . import tasks
-from .database import Demos
 
 app = Flask(__name__)
 server = HTTPServer(WSGIContainer(app))
@@ -156,10 +155,10 @@ def demo_status(demo_id):
         "response": "DemoDoesNotExist"
     }
     """
-    demo = Demos.get_or_none(Demos.demo_id == demo_id)
-    if demo:
+    status = tasks.update_demo_status(demo_id)
+    if status:
         # Returns the demo status
-        return jsonify({'demo_id': demo.id, 'status': demo.status})
+        return jsonify({'demo_id': demo_id, 'status': status})
     else:
         # No demo with the provided demo ID found, return bad request.
         return jsonify({
