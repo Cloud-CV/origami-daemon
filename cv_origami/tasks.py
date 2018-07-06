@@ -7,7 +7,7 @@ from docker.errors import NotFound, APIError, BuildError
 
 from .celery import app
 from .constants import ORIGAMI_CONFIG_DIR, ORIGAMI_DEMOS_DIRNAME, \
-    ORIGAMI_WRAPPED_DEMO_PORT
+    ORIGAMI_WRAPPED_DEMO_PORT, DEMO_APP_WORKING_DIR
 from .database import Demos, get_a_free_port
 from .docker import docker_client
 from .exceptions import OrigamiDockerConnectionError
@@ -103,7 +103,7 @@ def deploy_demo(demo_id, demo_dir):
         # Run a new container instance for the demo.
         if not demo.port:
             port = get_a_free_port()
-            logging.info('New port for demo is {}', port)
+            logging.info('New port for demo is {}'.format(port))
             demo.port = port
 
         port_map = '{}/tcp'.format(ORIGAMI_WRAPPED_DEMO_PORT)
@@ -112,7 +112,8 @@ def deploy_demo(demo_id, demo_dir):
             detach=True,
             name=demo_id,
             ports={port_map: demo.port},
-            remove=True)
+            remove=True,
+            working_dir=DEMO_APP_WORKING_DIR)
 
         logging.info('Demo deployed with container id : {}'.format(cont.id))
         demo.container_id = cont.id
