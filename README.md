@@ -17,6 +17,13 @@ $ pip install -e .
 
 # Start using cv_origami
 $ cv_origami
+
+# Run celery workers
+# Make sure that rabbitmq-server is running
+$ celery -A cv_origami worker -l info
+
+# Run server
+$ cv_origami run_server
 ```
 
 ## Wiki
