@@ -1,8 +1,8 @@
 import unittest
 
 from click.testing import CliRunner
-from cv_origami.main import main
-from cv_origami.constants import WELCOME_TEXT
+from origamid.main import main
+from origamid.constants import WELCOME_TEXT
 
 
 class TestMain(unittest.TestCase):

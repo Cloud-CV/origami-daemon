@@ -31,14 +31,15 @@ class OrigamiLogger(object):
         """
         Creates an instance of Origami logger.
 
-        By default creating an instance of this class enables console logging
-        in minimilistic format. To enable file_logging with a custom level send
+        By default creating an instance of this class enables console logging \
+        in minimilistic format. To enable file_logging with a custom level send\
         the ``file_log_level`` parameter.
 
-        A custom log level for console logger can also be provided using
+        A custom log level for console logger can also be provided using \
         ``console_log_level`` parameter.
 
         .. code-block:: python
+
             from logger import OrigamiLogger
             import logging
 
@@ -52,6 +53,7 @@ class OrigamiLogger(object):
 
             logger.enable_console_logging(level=logging.WARN)
             logging.warn("This will be logged to console as a warning")
+
 
         Args:
             file_log_level: Level for file logger.
@@ -78,7 +80,7 @@ class OrigamiLogger(object):
         `2018-06-15 11:19:44 | main.py | INFO | root | The actual log message`
 
         Returns:
-            console_formatter (logging.Formatter): A format with a verbose log
+            console_formatter (logging.Formatter): A format with a verbose log \
                 message.
         """
         console_formatter = logging.Formatter(
@@ -92,13 +94,15 @@ class OrigamiLogger(object):
         """
         Retuns a minimal console formatter, the format of the message is
 
-        ` [+] Here is an info log
-          [!] Here is a warning log
-          [-] This is an error log `
+        .. code-block:: bash
+
+            [+] Here is an info log
+            [!] Here is a warning log
+            [-] This is an error log
 
         Returns:
-            console_formatter (logging.Formatter): A format with a minimal log
-                message.
+            console_formatter (logging.Formatter): A format with a minimal \
+                log message.
         """
         console_formatter = CustomConsoleFormatter()
 
@@ -106,16 +110,20 @@ class OrigamiLogger(object):
 
     def _get_file_formatter(self):
         """
-        Returns a file formatter to work with for logging purposes, file logs
+        Returns a file formatter to work with for logging purposes, file logs \
         are verbose and includes most of the details. For example
 
-        ```
-        INFO | root | 2018-06-15 11:22:02 | main.py | 17 | This is an info log
-        WARNING | root | 2018-06-15 11:22:02 | main.py | 18 | This is a warning
-            log
-        ERROR | root | 2018-06-15 11:22:02 | main.py | 19 | This is an error log
-        DEBUG | root | 2018-06-15 11:22:02 | main.py | 20 | This is an error log
-        ```
+        .. code-block:: bash
+
+            INFO | root | 2018-06-15 11:22:02 | main.py | 17 | This is an info \
+log
+            WARNING | root | 2018-06-15 11:22:02 | main.py | 18 | This is a \
+warning log
+            ERROR | root | 2018-06-15 11:22:02 | main.py | 19 | This is an \
+error log
+            DEBUG | root | 2018-06-15 11:22:02 | main.py | 20 | This is a \
+log
+
 
         Returns:
             file_formatter (logging.Formatter): The file fomatter.
@@ -132,13 +140,14 @@ class OrigamiLogger(object):
         """
         This enable console logging.
 
-        Console logging by defalut uses minimalistic console formatter so as
-        not to bloat the console. If a more verbose console log is needed send
+        Console logging by defalut uses minimalistic console formatter so as \
+        not to bloat the console. If a more verbose console log is needed send \
         the ``verbose`` parameter as ``True``
 
-        For this to work properly with custom formatter `CustomConsoleFormatter`
-        like in the case of verbose=False file_handlers should be before
-        console_handlerssince FileHandler inherits from StreamHandler which
+        For this to work properly with custom formatter \
+        `CustomConsoleFormatter` \
+        like in the case of verbose=False file_handlers should be before \
+        console_handlerssince FileHandler inherits from StreamHandler which \
         conflicts the log message format in FileLogger.
 
         Args:
@@ -167,9 +176,9 @@ class OrigamiLogger(object):
 
     def disable_console_logging(self):
         """
-        Removes all the non FileHandlers from logger handlers, since
-        for this implementation we are mainly concerned with file and
-        console loggers this necesserily removes all ConsoleHandlers disabling
+        Removes all the non FileHandlers from logger handlers, since \
+        for this implementation we are mainly concerned with file and \
+        console loggers this necesserily removes all ConsoleHandlers disabling \
         any console logging.
         """
         logger = logging.getLogger()
@@ -181,7 +190,7 @@ class OrigamiLogger(object):
 
     def enable_file_logging(self, level=None):
         """
-        File logging are quite verbose by default, if you want to change the
+        File logging are quite verbose by default, if you want to change the \
         format of the log change the formatter in ``_get_file_formatter()``
 
         Args:
@@ -230,7 +239,7 @@ class CustomConsoleFormatter(logging.Formatter):
 
     def format(self, record):
         """ Choose format according to record level
-        It overrides the method from logging.Formatter which formats the log
+        It overrides the method from logging.Formatter which formats the log \
         message
 
         Args:
