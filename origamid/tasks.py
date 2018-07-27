@@ -11,8 +11,43 @@ from .constants import ORIGAMI_CONFIG_DIR, ORIGAMI_DEMOS_DIRNAME, \
 from .database import Demos, get_a_free_port
 from .docker import docker_client
 from .exceptions import OrigamiDockerConnectionError
+from .logger import OrigamiLogger
+
+logger = OrigamiLogger(console_log_level=logging.DEBUG)
+logger.disable_file_logging()
 
 
+def update_demo_status(demo):
+    """
+    Update current demo status by looking up for the demo container
+    using docker.
+
+    Args:
+        demo(Demos): Demo table object.
+    """
+    logging.info('Updating the status of demo : {}'.format(demo.id))
+    try:
+        if demo.container_id:
+            container = docker_client.containers.get(demo.container_id)
+            logging.info('Updated demo status from {} to {}'.format(
+                demo.status, container.status))
+            demo.status = container.status
+            demo.save()
+
+    except NotFound:
+        logging.info(
+            'No container instance found for demo : {} and id : {}'.format(
+                demo.demo_id, demo.container_id))
+        demo.container_id = None
+        demo.status = 'empty'
+        demo.save()
+
+    except APIError as e:
+        raise OrigamiDockerConnectionError(
+            'Error while communicating to to docker API: {}'.format(e))
+
+
+@app.task()
 def remove_demo_instance_if_exist(demo_id, status='empty'):
     """
     Checks if an instance is running for the demo provided with ID
@@ -44,10 +79,18 @@ def remove_demo_instance_if_exist(demo_id, status='empty'):
             logging.info('Container instance with id {} found'.format(
                 demo.container_id))
 
-            # Stop and remove the container
+            # Try stopping the container first
             logging.info('Removing container instance for demo')
-            container.stop(timeout=5)
-            container.remove()
+            container.stop(timeout=10)
+
+            # Check if the container exist after stopping, if it exist
+            # Remove it
+            try:
+                container = docker_client.containers.get(demo.container_id)
+                if container:
+                    container.remove()
+            except NotFound:
+                pass
 
             logging.info('Container instance removed')
             demo.status = status
@@ -103,7 +146,7 @@ def deploy_demo(demo_id, demo_dir):
         # Run a new container instance for the demo.
         if not demo.port:
             port = get_a_free_port()
-            logging.info('New port for demo is {}', port)
+            logging.info('New port for demo is {}'.format(port))
             demo.port = port
 
         port_map = '{}/tcp'.format(ORIGAMI_WRAPPED_DEMO_PORT)

@@ -1,7 +1,12 @@
 import click
+import logging
 
 from .constants import WELCOME_TEXT
 from .api import run_server
+from .logger import OrigamiLogger
+
+logger = OrigamiLogger(
+    file_log_level=logging.DEBUG, console_log_level=logging.DEBUG)
 
 
 @click.group(invoke_without_command=True)

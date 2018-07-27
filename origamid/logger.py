@@ -217,7 +217,7 @@ log
         Removes all the non FileHandlers from our logger handlers
         """
         logger = logging.getLogger()
-        for handler in logging.handlers:
+        for handler in logger.handlers:
             if isinstance(handler, logging.FileHandler):
                 logger.removeHandler(handler)
 
