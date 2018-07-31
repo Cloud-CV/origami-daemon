@@ -30,48 +30,56 @@ def trigger_deploy(demo_id):
     be a POST request with `bundle_path` in request body as parameter,
     this path should be local to the server.
 
-    * For now we are considering only local deployments so we are assuming
-    that both the origami_daemon and origami_server are running on the same
+    * For now we are considering only local deployments so we are assuming \
+    that both the origami_daemon and origami_server are running on the same \
     server so origami server can give the local path to execute the build.
 
-    $ curl --include -X POST 127.0.0.1:9002/deploy_trigger/ff90c8 --data \
-        "bundle_path=/valid/test.zip"
+    .. code-block:: bash
 
-    HTTP/1.1 200 OK
-    Content-Type: application/json
-    Content-Length: 103
-    Server: TornadoServer/5.0.2
+        $ curl --include -X POST 127.0.0.1:9002/deploy_trigger/ff90c8 --data \
+            "bundle_path=/valid/test.zip"
 
-    {
-      'response': 'BundleValidated',
-      'message': 'Deploy has been triggred for bundle : /ff90c8, checks stats'
-    }
+        HTTP/1.1 200 OK
+        Content-Type: application/json
+        Content-Length: 103
+        Server: TornadoServer/5.0.2
 
-    $ curl --include -X POST 127.0.0.1:9002/deploy_trigger/ff90c8
+        {
+          'response': 'BundleValidated',
+          'message': 'Deploy has been triggred for bundle : /ff90c8, checks \
+            stats'
+        }
 
-    HTTP/1.1 400 BAD REQUEST
-    Content-Type: application/json
-    Content-Length: 97
-    Server: TornadoServer/5.0.2
 
-    {
-      'response': 'InvalidRequestParameters',
-      'message': 'Required parameters : bundle_path and demo_id'
-    }
+    .. code-block:: bash
 
-    $ curl --include -X POST 127.0.0.1:9002/deploy_trigger/ff90c8 \
-        "bundle_path=/invalid/test.zip"
+        $ curl --include -X POST 127.0.0.1:9002/deploy_trigger/ff90c8
 
-    HTTP/1.1 400 BAD REQUEST
-    Content-Type: application/json
-    Content-Length: 124
-    Server: TornadoServer/5.0.2
+        HTTP/1.1 400 BAD REQUEST
+        Content-Type: application/json
+        Content-Length: 97
+        Server: TornadoServer/5.0.2
 
-    {
-      'response': 'InvalidDemoBundle',
-      'message': 'The demo bundle provided is not valid',
-      'reason': 'requirements.txt was not valid'
-    }
+        {
+          'response': 'InvalidRequestParameters',
+          'message': 'Required parameters : bundle_path and demo_id'
+        }
+
+    .. code-block:: bash
+
+        $ curl --include -X POST 127.0.0.1:9002/deploy_trigger/ff90c8 \
+            "bundle_path=/invalid/test.zip"
+
+        HTTP/1.1 400 BAD REQUEST
+        Content-Type: application/json
+        Content-Length: 124
+        Server: TornadoServer/5.0.2
+
+        {
+          'response': 'InvalidDemoBundle',
+          'message': 'The demo bundle provided is not valid',
+          'reason': 'requirements.txt was not valid'
+        }
 
     Args:
         demo_id: Id of the demo to be deployed
@@ -131,30 +139,35 @@ def demo_status(demo_id):
     Returns the current status of the demo with the provided
     demo_id from the Demos table.
 
-    $ curl --include -X GET 127.0.0.1:9002/demo/status/ffc806
+    .. code-block:: bash
 
-    HTTP/1.1 200 OK
-    Content-Type: application/json
-    Content-Length: 33
-    Server: TornadoServer/5.0.2
+        $ curl --include -X GET 127.0.0.1:9002/demo/status/ffc806
 
-    {
-        "demo_id": 1,
-        "status": "running"
-    }
+        HTTP/1.1 200 OK
+        Content-Type: application/json
+        Content-Length: 33
+        Server: TornadoServer/5.0.2
+
+        {
+            "demo_id": 1,
+            "status": "running"
+        }
 
 
-    $ curl --include -X GET 127.0.0.1:9002/demo/status/invaild_demo
+    .. code-block:: bash
 
-    HTTP/1.1 400 BAD REQUEST
-    Content-Type: application/json
-    Content-Length: 93
-    Server: TornadoServer/5.0.2
+        $ curl --include -X GET 127.0.0.1:9002/demo/status/invaild_demo
 
-    {
-        "message": "Demo ffc80f6 does not exist, try deploying first",
-        "response": "DemoDoesNotExist"
-    }
+        HTTP/1.1 400 BAD REQUEST
+        Content-Type: application/json
+        Content-Length: 93
+        Server: TornadoServer/5.0.2
+
+        {
+            "message": "Demo ffc80f6 does not exist, try deploying first",
+            "response": "DemoDoesNotExist"
+        }
+
     """
     demo = Demos.get_or_none(Demos.demo_id == demo_id)
     if demo:
@@ -177,30 +190,34 @@ def remove_demo_instance(demo_id):
     if the provided demo id has a container running, by first looking into
     demo table and then checking containers.
 
-    $ curl --include -X DELETE 127.0.0.1:9002/demo/remove/running_demo
+    .. code-block:: bash
 
-    HTTP/1.1 200 OK
-    Content-Type: application/json
-    Content-Length: 85
-    Server: TornadoServer/5.0.2
+        $ curl --include -X DELETE 127.0.0.1:9002/demo/remove/running_demo
 
-    {
-        "message": "Instance for demo(ffc806) removed",
-        "response": "RemovedDeployedInstance"
-    }
+        HTTP/1.1 200 OK
+        Content-Type: application/json
+        Content-Length: 85
+        Server: TornadoServer/5.0.2
+
+        {
+            "message": "Instance for demo(ffc806) removed",
+            "response": "RemovedDeployedInstance"
+        }
 
 
-    $ curl --include -X DELETE 127.0.0.1:9002/demo/remove/non_running_demo
+    .. code-block:: bash
 
-    HTTP/1.1 200 OK
-    Content-Type: application/json
-    Content-Length: 76
-    Server: TornadoServer/5.0.2
+        $ curl --include -X DELETE 127.0.0.1:9002/demo/remove/non_running_demo
 
-    {
-        "message": "No demo instance found for ffc806",
-        "response": "NoDemoInstance"
-    }
+        HTTP/1.1 200 OK
+        Content-Type: application/json
+        Content-Length: 76
+        Server: TornadoServer/5.0.2
+
+        {
+            "message": "No demo instance found for ffc806",
+            "response": "NoDemoInstance"
+        }
     """
     try:
         demo = tasks.remove_demo_instance_if_exist(demo_id)
@@ -263,7 +280,7 @@ def configure_flask_logging():
 
 def configure_origami_db(base_dir):
     """
-    Configure database for cv_origami, it creates a new
+    Configure database for origamid, it creates a new
     database with the required schema if no database exist in origami
     config directory.
     """
@@ -278,7 +295,7 @@ def configure_origami_db(base_dir):
 
 def run_origami_bootsteps():
     """
-    Run bootsteps to configure cv_origami.
+    Run bootsteps to configure origamid.
     This includes the following
 
     * Configure web server logging

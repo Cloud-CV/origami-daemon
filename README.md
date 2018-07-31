@@ -15,22 +15,28 @@ $ virtualenv venv
 $ source venv/bin/activate
 $ pip install -e .
 
-# Start using cv_origami
-$ cv_origami
+# Start using origamid
+$ origamid
 
 # Run celery workers
 # Make sure that rabbitmq-server is running
-$ celery -A cv_origami worker -l info
+$ celery -A origamid worker -l info
 
 # Run server
-$ cv_origami run_server
+$ origamid run_server
 ```
 
 ### Testing
 
 This project uses tox for testing purposes. To set up testing environment install test-requirements.txt
 
-`pip install -r test-requirements.txt`
+`pip install -r dev-requirements.txt`
+
+### Documentation
+
+Documentation for the project can be found in [docs](/docs)
+
+* The project uses sphinx for building documentation coupled with read the docs theme.
 
 #### Run tests
 

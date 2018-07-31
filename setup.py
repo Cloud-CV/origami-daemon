@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-PROJECT = "cv_origami"
+PROJECT = "origamid"
 
 with open('README.md') as readme_file:
     README = readme_file.read()
@@ -37,15 +37,16 @@ setup(
   classifiers=[
     'Development Status :: 1 - Alpha',
     'Programming Language :: Python',
-    'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3.5',
+    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
     'Intended Audience :: Developers',
     'Environment :: Console',
   ],
 
   entry_points="""
     [console_scripts]
-    cv_origami = cv_origami.main:main
+    origamid = origamid.main:main
     """,
 
   zip_safe=False,
