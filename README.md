@@ -26,6 +26,16 @@ $ celery -A cv_origami worker -l info
 $ cv_origami run_server
 ```
 
+### Testing
+
+This project uses tox for testing purposes. To set up testing environment install test-requirements.txt
+
+`pip install -r test-requirements.txt`
+
+#### Run tests
+
+`tox`
+
 ## Wiki
 
 * New Demo Creation pipeline ([Wiki link](https://github.com/Cloud-CV/origami-daemon/wiki))

@@ -1,0 +1,11 @@
+[run]
+branch = True
+source = cv_origami
+
+[report]
+exclude_lines =
+	@click.*
+    if __name__ == .__main__.:
+
+[html]
+directory = html

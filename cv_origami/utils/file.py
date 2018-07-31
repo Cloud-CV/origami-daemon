@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 import zipfile
+import logging
 
 
 from ..constants import LOGS_DIR, LOGS_FILE_MODE_REQ, ORIGAMI_CONFIG_DIR, \
@@ -75,12 +76,14 @@ def get_model_bundles_base_dir():
     try:
         dirpath = os.path.join(os.environ['HOME'], ORIGAMI_CONFIG_DIR,
                                ORIGAMI_DEMOS_DIRNAME)
-        if not (os.path.isdir(dirpath)
-                and validate_directory_access(dirpath, 'w+')):
+        if not os.path.isdir(dirpath):
             os.makedirs(dirpath, mode=0o755, exist_ok=True)
-        return dirpath
-    except OSError:
-        return None
+        if validate_directory_access(dirpath, 'w+'):
+            return dirpath
+    except OSError as e:
+        logging.error(
+            'OSError while validating demo bundles directory : {}'.format(e))
+    return None
 
 
 def clean_directory(directory):
