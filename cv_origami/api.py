@@ -14,8 +14,10 @@ from .constants import DEFAULT_API_SERVER_PORT, WELCOME_TEXT, \
 from .utils.validation import validate_demo_bundle_zip, \
     preprocess_demo_bundle_zip
 from .utils.file import validate_directory_access
-from .exceptions import InvalidDemoBundleException, OrigamiConfigException
+from .exceptions import InvalidDemoBundleException, OrigamiConfigException, \
+    OrigamiDockerConnectionError
 from . import tasks
+from .database import Demos
 
 app = Flask(__name__)
 server = HTTPServer(WSGIContainer(app))
@@ -32,24 +34,39 @@ def trigger_deploy(demo_id):
     that both the origami_daemon and origami_server are running on the same
     server so origami server can give the local path to execute the build.
 
-    curl -X POST 127.0.0.1:9002/deploy_trigger/ff90c8 --data "bundle_path=
-        /tmp/test.zip"
+    $ curl --include -X POST 127.0.0.1:9002/deploy_trigger/ff90c8 --data \
+        "bundle_path=/valid/test.zip"
 
-    Possible responses:
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+    Content-Length: 103
+    Server: TornadoServer/5.0.2
 
-    200 OK
     {
       'response': 'BundleValidated',
       'message': 'Deploy has been triggred for bundle : /ff90c8, checks stats'
     }
 
-    400 BAD_REQUEST
+    $ curl --include -X POST 127.0.0.1:9002/deploy_trigger/ff90c8
+
+    HTTP/1.1 400 BAD REQUEST
+    Content-Type: application/json
+    Content-Length: 97
+    Server: TornadoServer/5.0.2
+
     {
       'response': 'InvalidRequestParameters',
       'message': 'Required parameters : bundle_path and demo_id'
     }
 
-    400 BAD_REQUEST
+    $ curl --include -X POST 127.0.0.1:9002/deploy_trigger/ff90c8 \
+        "bundle_path=/invalid/test.zip"
+
+    HTTP/1.1 400 BAD REQUEST
+    Content-Type: application/json
+    Content-Length: 124
+    Server: TornadoServer/5.0.2
+
     {
       'response': 'InvalidDemoBundle',
       'message': 'The demo bundle provided is not valid',
@@ -108,6 +125,111 @@ def trigger_deploy(demo_id):
         sys.exit(1)
 
 
+@app.route('/demo/status/<demo_id>', methods=['GET'])
+def demo_status(demo_id):
+    """
+    Returns the current status of the demo with the provided
+    demo_id from the Demos table.
+
+    $ curl --include -X GET 127.0.0.1:9002/demo/status/ffc806
+
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+    Content-Length: 33
+    Server: TornadoServer/5.0.2
+
+    {
+        "demo_id": 1,
+        "status": "running"
+    }
+
+
+    $ curl --include -X GET 127.0.0.1:9002/demo/status/invaild_demo
+
+    HTTP/1.1 400 BAD REQUEST
+    Content-Type: application/json
+    Content-Length: 93
+    Server: TornadoServer/5.0.2
+
+    {
+        "message": "Demo ffc80f6 does not exist, try deploying first",
+        "response": "DemoDoesNotExist"
+    }
+    """
+    demo = Demos.get_or_none(Demos.demo_id == demo_id)
+    if demo:
+        # Returns the demo status
+        return jsonify({'demo_id': demo.id, 'status': demo.status})
+    else:
+        # No demo with the provided demo ID found, return bad request.
+        return jsonify({
+            'response':
+            'DemoDoesNotExist',
+            'message':
+            'Demo {} does not exist, try deploying first'.format(demo_id)
+        }), 400
+
+
+@app.route('/demo/remove/<demo_id>', methods=['DELETE'])
+def remove_demo_instance(demo_id):
+    """
+    Remove demo docker container instance if it exist. This first checks
+    if the provided demo id has a container running, by first looking into
+    demo table and then checking containers.
+
+    $ curl --include -X DELETE 127.0.0.1:9002/demo/remove/running_demo
+
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+    Content-Length: 85
+    Server: TornadoServer/5.0.2
+
+    {
+        "message": "Instance for demo(ffc806) removed",
+        "response": "RemovedDeployedInstance"
+    }
+
+
+    $ curl --include -X DELETE 127.0.0.1:9002/demo/remove/non_running_demo
+
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+    Content-Length: 76
+    Server: TornadoServer/5.0.2
+
+    {
+        "message": "No demo instance found for ffc806",
+        "response": "NoDemoInstance"
+    }
+    """
+    try:
+        demo = tasks.remove_demo_instance_if_exist(demo_id)
+        if demo:
+            # A demo instance was found and was removed.
+            return jsonify({
+                'response':
+                'RemovedDeployedInstance',
+                'message':
+                'Instance for demo({}) removed'.format(demo_id)
+            }), 200
+        else:
+            # No docker instance for the demo found.
+            return jsonify({
+                'response':
+                'NoDemoInstance',
+                'message':
+                'No demo instance found for {}'.format(demo_id)
+            }), 200
+
+    except OrigamiDockerConnectionError as e:
+        # Error while communicating using Docker API.
+        return jsonify({
+            'response': 'InternalServerError',
+            'message': 'Problem with docker API connection',
+            'reason': '{}'.format(e)
+        }), 500
+
+
 @app.route('/', methods=['GET'])
 def welcome_text():
     """
@@ -125,6 +247,7 @@ def welcome_text():
     return WELCOME_TEXT
 
 
+# Origami BOOTSETP functions.
 def configure_flask_logging():
     """
     Configure logging for running python flask server.
@@ -139,14 +262,29 @@ def configure_flask_logging():
 
 
 def configure_origami_db(base_dir):
+    """
+    Configure database for cv_origami, it creates a new
+    database with the required schema if no database exist in origami
+    config directory.
+    """
+    logging.info('Configuring database')
     db_path = os.path.join(base_dir, ORIGAMI_DB_NAME)
     if not os.path.exists(db_path):
         logging.warn('No database found, creating new.')
         from .database import bootstrap_db
         bootstrap_db()
+    logging.info('Database configured')
 
 
 def run_origami_bootsteps():
+    """
+    Run bootsteps to configure cv_origami.
+    This includes the following
+
+    * Configure web server logging
+    * Configure Database
+    * Validating origami configs.
+    """
     logging.info('Running origami bootsteps')
     origami_config_dir = os.path.join(os.environ['HOME'], ORIGAMI_CONFIG_DIR)
     if not os.path.isdir(origami_config_dir):

@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import os
 from peewee import SqliteDatabase, Model, CharField, DateTimeField, \
@@ -16,7 +17,7 @@ class BaseModel(Model):
         database = db
 
 
-class DeployedDemos(BaseModel):
+class Demos(BaseModel):
     """
     This table holds the information about the details regarding
     the demos deployed on the server. Each demo which has been deployed
@@ -36,7 +37,7 @@ class DeployedDemos(BaseModel):
     """
     demo_id = CharField(unique=True, null=False)
     container_id = CharField(unique=True, null=True)
-    image_id = CharField(unique=True, null=True)
+    image_id = CharField(null=True)
     port = IntegerField(unique=True, null=True)
     status = CharField(null=False)
     timestamp = DateTimeField(default=datetime.datetime.now)
@@ -48,9 +49,9 @@ class Logs(BaseModel):
 
     The Schema includes the following columns
 
-    * demo: Foreign key corresponding to DeployedDemos
+    * demo: Foreign key corresponding to Demos
     """
-    demo = ForeignKeyField(DeployedDemos, backref='logs')
+    demo = ForeignKeyField(Demos, backref='logs')
     message = TextField()
     timestamp = DateTimeField(default=datetime.datetime.now)
 
@@ -60,19 +61,22 @@ def get_a_free_port():
     Returns a PORT which is free by looking into the database for deployed
     demos.
     """
-    demos = DeployedDemos.select(
-        DeployedDemos.port).order_by(+DeployedDemos.port)
+    logging.info('Trying to find a free port.')
+    demos = Demos.select(Demos.port).order_by(+Demos.port)
 
     port = DEMOS_PORT_COUNT_START
     for demo in demos:
+        logging.info('Checking port {}'.format(demo.port))
         if port > DEMOS_PORT_COUNT_END:
             return None
-        if demo.id != port:
+        if demo.port != port:
             break
         else:
             port += 1
+
+    logging.info('Found free port : {}'.format(port))
     return port
 
 
 def bootstrap_db():
-    db.create_tables([DeployedDemos, Logs])
+    db.create_tables([Demos, Logs])
