@@ -30,6 +30,7 @@ class Demos(BaseModel):
     * image_id: Image on which the container is based.
     * port: Each demo exposes one and only one PORT which should be reported
         here
+    * log_id: id of the Log file for the demo.
     * status: Status for the deployement of demo.
         - It can be one of running, stopped, redeploying, deploying, empty,
             error
@@ -39,6 +40,7 @@ class Demos(BaseModel):
     container_id = CharField(unique=True, null=True)
     image_id = CharField(null=True)
     port = IntegerField(unique=True, null=True)
+    log_id = CharField(unique=True, null=False)
     status = CharField(null=False)
     timestamp = DateTimeField(default=datetime.datetime.now)
 
