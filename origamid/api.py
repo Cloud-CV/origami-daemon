@@ -16,6 +16,9 @@ from .utils.validation import validate_demo_bundle_zip, \
 from .utils.file import validate_directory_access
 from .exceptions import InvalidDemoBundleException, OrigamiConfigException, \
     OrigamiDockerConnectionError
+from .api_response import resp_demo_does_not_exist, resp_invalid_deploy_params,\
+    resp_invalid_demo_bundle, resp_demo_deployment_trig, resp_docker_api_error,\
+    resp_no_demo_instance_exist
 from . import tasks
 from .database import Demos
 
@@ -100,37 +103,52 @@ def trigger_deploy(demo_id):
             # Start a worker process to deploy the demo, this must be
             # asynchronous.
             tasks.deploy_demo.delay(demo_id, demo_dir)
-
-            return jsonify({
-                'response':
-                'BundleValidated',
-                'message':
-                'Deploy has been triggred for bundle : {}, checks stats'.format(
-                    demo_dir)
-            }), 200
+            return resp_demo_deployment_trig(demo_dir)
 
         else:
             logging.warn('Bundle Path is not provided in POST parameters')
-            return jsonify({
-                'response':
-                'InvalidRequestParameters',
-                'message':
-                'Required parameters : bundle_path and demo_id'
-            }), 400
+            return resp_invalid_deploy_params()
 
     except InvalidDemoBundleException as e:
         logging.warn("Demo bundle is invalid : {}".format(e))
-        return jsonify({
-            'response': 'InvalidDemoBundle',
-            'message': 'The demo bundle provided is not valid',
-            'reason': '{}'.format(e)
-        }), 400
+        return resp_invalid_demo_bundle(e)
 
     except OrigamiConfigException:
         # If thie exception occurs, exit the server since it is not
         # configured properly.
         logging.error("Origami global config are not valid")
         sys.exit(1)
+
+
+@app.route('/demo/port/<demo_id>', methods=['GET'])
+def demo_port(demo_id):
+    """
+    Returns the current port of the demo with the provided
+    demo_id from the Demos table. It does not check for the status
+    of the demo and neither it updates it. It simply returns the port
+    from the table.
+
+    .. code-block:: bash
+
+        $ curl --include -X GET 127.0.0.1:9002/demo/port/ffc806
+
+        HTTP/1.1 200 OK
+        Content-Type: application/json
+        Content-Length: 14
+        Server: TornadoServer/5.0.2
+
+        {
+            "port": 20000
+        }
+    """
+    demo = Demos.get_or_none(Demos.demo_id == demo_id)
+    if demo:
+        tasks.update_demo_status(demo)
+        # Returns the demo status
+        return jsonify({'port': demo.port})
+    else:
+        # No demo with the provided demo ID found, return bad request.
+        return resp_demo_does_not_exist(demo_id)
 
 
 @app.route('/demo/status/<demo_id>', methods=['GET'])
@@ -150,6 +168,7 @@ def demo_status(demo_id):
 
         {
             "demo_id": 1,
+            "port": 20000,
             "status": "running"
         }
 
@@ -172,15 +191,14 @@ def demo_status(demo_id):
     demo = Demos.get_or_none(Demos.demo_id == demo_id)
     if demo:
         # Returns the demo status
-        return jsonify({'demo_id': demo.id, 'status': demo.status})
+        return jsonify({
+            'demo_id': demo.id,
+            'port': demo.port,
+            'status': demo.status
+        })
     else:
         # No demo with the provided demo ID found, return bad request.
-        return jsonify({
-            'response':
-            'DemoDoesNotExist',
-            'message':
-            'Demo {} does not exist, try deploying first'.format(demo_id)
-        }), 400
+        return resp_demo_does_not_exist(demo_id)
 
 
 @app.route('/demo/remove/<demo_id>', methods=['DELETE'])
@@ -220,31 +238,22 @@ def remove_demo_instance(demo_id):
         }
     """
     try:
-        demo = tasks.remove_demo_instance_if_exist(demo_id)
+        demo = tasks.remove_demo_instance_if_exist.delay(demo_id)
         if demo:
             # A demo instance was found and was removed.
             return jsonify({
                 'response':
-                'RemovedDeployedInstance',
+                'TriggeredRemoveDeployedInstance',
                 'message':
-                'Instance for demo({}) removed'.format(demo_id)
+                'Removal of demo instance with id: {} initiated'.format(demo_id)
             }), 200
         else:
             # No docker instance for the demo found.
-            return jsonify({
-                'response':
-                'NoDemoInstance',
-                'message':
-                'No demo instance found for {}'.format(demo_id)
-            }), 200
+            return resp_no_demo_instance_exist(demo_id)
 
     except OrigamiDockerConnectionError as e:
         # Error while communicating using Docker API.
-        return jsonify({
-            'response': 'InternalServerError',
-            'message': 'Problem with docker API connection',
-            'reason': '{}'.format(e)
-        }), 500
+        return resp_docker_api_error(e)
 
 
 @app.route('/', methods=['GET'])
