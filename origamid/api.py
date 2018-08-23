@@ -5,6 +5,7 @@ import sys
 import os
 
 from flask import Flask, request, jsonify, send_file, safe_join
+from flask_cors import CORS
 from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
@@ -28,6 +29,7 @@ if not STATIC_DIR:
     sys.exit(1)
 
 app = Flask(__name__, static_folder=STATIC_DIR)
+CORS(app, resources={r"/*": {"origins": "*"}})
 server = HTTPServer(WSGIContainer(app))
 
 

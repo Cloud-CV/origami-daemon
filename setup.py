@@ -16,6 +16,7 @@ install_requires = [
   'peewee==3.5.0',
   'celery==4.2.0',
   'docker==3.4.0',
+  'Flask-Cors==3.0.6',
 ]
 
 setup(
