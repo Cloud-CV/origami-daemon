@@ -6,7 +6,7 @@ import logging
 
 
 from ..constants import LOGS_DIR, LOGS_FILE_MODE_REQ, ORIGAMI_CONFIG_DIR, \
-    ORIGAMI_DEMOS_DIRNAME
+    ORIGAMI_DEMOS_DIRNAME, ORIGAMI_STATIC_DIR, ORIGAMI_DEPLOY_LOGS_DIR
 from ..exceptions import OrigamiConfigException
 
 
@@ -83,6 +83,25 @@ def get_model_bundles_base_dir():
     except OSError as e:
         logging.error(
             'OSError while validating demo bundles directory : {}'.format(e))
+    return None
+
+
+def get_origami_static_dir():
+    """
+    Returns the absolute path to the static directory served by origami-daemon.
+    Which simply resolves to for now `$HOME/.origami/static/`
+    """
+    try:
+        dirpath = os.path.join(os.environ['HOME'], ORIGAMI_CONFIG_DIR,
+                               ORIGAMI_STATIC_DIR)
+        logs_dir = os.path.join(dirpath, ORIGAMI_DEPLOY_LOGS_DIR)
+        if not os.path.isdir(logs_dir):
+            os.makedirs(logs_dir, mode=0o755, exist_ok=True)
+        if validate_directory_access(dirpath, 'w+'):
+            return dirpath
+    except OSError as e:
+        logging.error(
+            'OSError while validating api static directory : {}'.format(e))
     return None
 
 

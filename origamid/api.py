@@ -4,16 +4,17 @@ import six
 import sys
 import os
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file, safe_join
+from flask_cors import CORS
 from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 
 from .constants import DEFAULT_API_SERVER_PORT, WELCOME_TEXT, \
-    ORIGAMI_CONFIG_DIR, ORIGAMI_DB_NAME
+    ORIGAMI_CONFIG_DIR, ORIGAMI_DB_NAME, ORIGAMI_DEPLOY_LOGS_DIR
 from .utils.validation import validate_demo_bundle_zip, \
     preprocess_demo_bundle_zip
-from .utils.file import validate_directory_access
+from .utils.file import validate_directory_access, get_origami_static_dir
 from .exceptions import InvalidDemoBundleException, OrigamiConfigException, \
     OrigamiDockerConnectionError
 from .api_response import resp_demo_does_not_exist, resp_invalid_deploy_params,\
@@ -22,7 +23,13 @@ from .api_response import resp_demo_does_not_exist, resp_invalid_deploy_params,\
 from . import tasks
 from .database import Demos
 
-app = Flask(__name__)
+STATIC_DIR = get_origami_static_dir()
+if not STATIC_DIR:
+    logging.error("ERROR in static directory for origami")
+    sys.exit(1)
+
+app = Flask(__name__, static_folder=STATIC_DIR)
+CORS(app, resources={r"/*": {"origins": "*"}})
 server = HTTPServer(WSGIContainer(app))
 
 
@@ -102,6 +109,7 @@ def trigger_deploy(demo_id):
             # Demo bundle has been verified and preprocessed
             # Start a worker process to deploy the demo, this must be
             # asynchronous.
+            logging.info('Handing over the task to celery worker')
             tasks.deploy_demo.delay(demo_id, demo_dir)
             return resp_demo_deployment_trig(demo_dir)
 
@@ -254,6 +262,22 @@ def remove_demo_instance(demo_id):
     except OrigamiDockerConnectionError as e:
         # Error while communicating using Docker API.
         return resp_docker_api_error(e)
+
+
+@app.route('/static/logs/<uid>', methods=['GET'])
+def get_logs(uid):
+    """
+    Return log file for the provided log ID
+    """
+    demo = Demos.get_or_none(Demos.demo_id == uid)
+    logs_id = demo.log_id if demo else uid
+
+    logfile = safe_join(
+        os.path.join(STATIC_DIR, ORIGAMI_DEPLOY_LOGS_DIR), logs_id)
+    if os.path.exists(logfile):
+        return send_file(logfile)
+
+    return jsonify({'response': 'InvalidDemoLogsRequested'}), 400
 
 
 @app.route('/', methods=['GET'])

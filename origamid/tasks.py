@@ -1,17 +1,24 @@
 # For python2 to handle imports properly
 from __future__ import absolute_import, unicode_literals
 
+import json
 import logging
 import os
+import re
+import uuid
+
+from docker import APIClient
 from docker.errors import NotFound, APIError, BuildError
 
 from .celery import app
 from .constants import ORIGAMI_CONFIG_DIR, ORIGAMI_DEMOS_DIRNAME, \
-    ORIGAMI_WRAPPED_DEMO_PORT
+    ORIGAMI_WRAPPED_DEMO_PORT, DOCKER_UNIX_SOCKET, ORIGAMI_DEPLOY_LOGS_DIR, \
+    LOGS_FILE_MODE_REQ
 from .database import Demos, get_a_free_port
 from .docker import docker_client
 from .exceptions import OrigamiDockerConnectionError
 from .logger import OrigamiLogger
+from .utils.file import get_origami_static_dir
 
 logger = OrigamiLogger(console_log_level=logging.DEBUG)
 logger.disable_file_logging()
@@ -131,17 +138,50 @@ def deploy_demo(demo_id, demo_dir):
 
     demo = Demos.get_or_none(Demos.demo_id == demo_id)
     if not demo:
-        demo = Demos(demo_id=demo_id, status='deploying')
+        demo_logs_uid = uuid.uuid4().hex
+        demo = Demos(demo_id=demo_id, log_id=demo_logs_uid, status='deploying')
 
     # Get the dockerfile from the demo dir from ORIGAMI_CONFIG_HOME
     dockerfile_dir = os.path.join(os.environ['HOME'], ORIGAMI_CONFIG_DIR,
                                   ORIGAMI_DEMOS_DIRNAME, demo_id)
     try:
+        # Here we are using low level API bindings provided by docker-py to
+        # interact with docker daemon. This enables us to collect image build
+        # Logs and provide them to user for debugging purposes.
         logging.info('Trying to build image for demo.')
-        image = docker_client.images.build(path=dockerfile_dir)[0]
+        cli = APIClient(base_url=DOCKER_UNIX_SOCKET)
+        response = [
+            json.loads(line.decode().strip())
+            for line in cli.build(path=dockerfile_dir)
+        ]
 
-        logging.info('Image built : ID: {}'.format(image.id))
-        demo.image_id = image.id
+        # Write build logs to log file.
+        logfile = os.path.join(get_origami_static_dir(),
+                               ORIGAMI_DEPLOY_LOGS_DIR, demo.log_id)
+        with open(logfile, LOGS_FILE_MODE_REQ) as fp:
+            json.dump(response, fp)
+
+        final_res = response[-1]['stream'].strip()
+        match_obj = re.match(r'Successfully built (.*)', final_res, re.M | re.I)
+        image_id = None
+
+        try:
+            match_obj.group(1)
+            # SHA256 of the built image.
+            image_id = response[-2]['aux']['ID'][7:]
+        except IndexError as e:
+            raise BuildError(e)
+        except Exception as e:
+            logging.error(
+                "Error while parsing SHA256 ID of the image : {}".format(e))
+            raise BuildError(e)
+
+        # This was without using low level dockerpy client, it did not provide
+        # logs for the build process.
+        # image = docker_client.images.build(path=dockerfile_dir)[0]
+
+        logging.info('Image built : ID: {}'.format(image_id))
+        demo.image_id = image_id
 
         # Run a new container instance for the demo.
         if not demo.port:
@@ -151,7 +191,7 @@ def deploy_demo(demo_id, demo_dir):
 
         port_map = '{}/tcp'.format(ORIGAMI_WRAPPED_DEMO_PORT)
         cont = docker_client.containers.run(
-            image.id,
+            image_id,
             detach=True,
             name=demo_id,
             ports={port_map: demo.port},
