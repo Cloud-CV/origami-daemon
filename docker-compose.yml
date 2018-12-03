@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+ web: 
+    build: .
+    expose:
+      - "9002"
+
+ celery:
+    restart: always
+    hostname: celery
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command: celery -A origamid worker -l info
+    volumes:
+      - .:/daemon
+    
