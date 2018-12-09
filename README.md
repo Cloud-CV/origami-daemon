@@ -4,6 +4,15 @@ This is a long running daemon process which deals with demo deployment and manag
 
 [Here](https://docs.google.com/document/d/128hrTVGwO9H7In6RJetpMSBTa7NpFg3BZdOUuVQQeIg/edit?usp=sharing) is the complete design documentation for the new demo creation pipeline which this tool deals with.
 
+## Getting started
+
+Build and run the Docker image using the following commands:
+
+```sh
+$ docker build -t origami-daemon .
+$ docker run -p 9002:9002 origami-daemon
+```
+
 ## Setup for development
 
 To get started with the development follow the following steps.
