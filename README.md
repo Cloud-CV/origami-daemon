@@ -33,14 +33,9 @@ $ origamid run_server
 git clone https://github.com/Cloud-CV/origami-daemon.git && cd origami-daemon
 ```
 
-2. Run Docker build
-
+2. Then execute the following command: 
 ```
-docker build . --tag origami-daemon:latest
-```
-Then execute the following command: 
-```
-docker run -p 9002:9002 -v /var/run/docker.sock:/var/run/docker.sock origami-daemon:latest 
+sudo docker-compose up
 ```
 
 For easy calling , execute the following command:
