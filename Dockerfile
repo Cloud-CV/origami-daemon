@@ -15,3 +15,5 @@ RUN pip install .
 RUN celery -A origamid worker -l info
 
 ENTRYPOINT [ "origamid" ]
+
+EXPOSE 9002

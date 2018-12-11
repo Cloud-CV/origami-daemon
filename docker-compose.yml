@@ -15,9 +15,9 @@ services:
     hostname: celery
     build:
       context: ./
-    command: celery -A origamid worker -l info
     volumes:
       - .:/daemon
     depends_on:
       - rabbitmq
+
       
