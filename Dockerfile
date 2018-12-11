@@ -10,6 +10,8 @@ COPY . /daemon
 
 WORKDIR /daemon
 
-RUN pip install -e .
+RUN pip install .
 
-CMD [ "origamid" ]
+RUN celery -A origamid worker -l info
+
+ENTRYPOINT [ "origamid" ]

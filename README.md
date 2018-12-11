@@ -35,14 +35,7 @@ git clone https://github.com/Cloud-CV/origami-daemon.git && cd origami-daemon
 
 2. Then execute the following command: 
 ```
-sudo docker-compose up
-```
-
-For easy calling , execute the following command:
-
-```
-chmod +x ./wrapper/origami-daemon
-sudo cp ./wrapper/origami-daemon /usr/local/bin/origami-daemon
+docker-compose up
 ```
 
 ### Testing

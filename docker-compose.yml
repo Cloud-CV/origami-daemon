@@ -20,13 +20,4 @@ services:
       - .:/daemon
     depends_on:
       - rabbitmq
-
-  worker:
-    build: 
-      context: .
-      dockerfile: Dockerfile
-    expose:
-      - "9002"
-    depends_on:
-      - rabbitmq
-      - celery
+      
