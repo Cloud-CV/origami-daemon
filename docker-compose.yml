@@ -1,0 +1,23 @@
+version: '2'
+services:
+    rabbit:
+        hostname: rabbit
+        image: rabbitmq:latest
+        environment:
+            - RABBITMQ_DEFAULT_USER=guest
+            - RABBITMQ_DEFAULT_PASS=guest
+        ports:
+            - "5673:5672"
+
+    worker:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        volumes:
+            - .:/origami-daemon
+        ports:
+            - "9002:9002"
+        links:
+            - rabbit
+        depends_on:
+            - rabbit

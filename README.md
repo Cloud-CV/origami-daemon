@@ -9,8 +9,7 @@ This is a long running daemon process which deals with demo deployment and manag
 Build and run the Docker image using the following commands:
 
 ```sh
-$ docker build -t origami-daemon .
-$ docker run -p 9002:9002 origami-daemon
+$ docker-compose up
 ```
 
 ## Setup for development
