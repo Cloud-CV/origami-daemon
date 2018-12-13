@@ -19,5 +19,5 @@ services:
       - .:/daemon
     depends_on:
       - rabbitmq
-
+    command: origamid run_server
 

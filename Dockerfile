@@ -12,7 +12,7 @@ WORKDIR /daemon
 
 RUN pip install .
 
-RUN celery -A origamid worker -l info
+CMD ["celery", "-A", "origamid worker", "-l", "info"]
 
 ENTRYPOINT [ "origamid" ]
 
