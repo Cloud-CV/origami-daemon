@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  rabbitmq:
+    hostname : rabbitmq
+    image : rabbitmq:latest
+    environment:
+       - RABBITMQ_DEFAULT_USER=admin
+       - RABBITMQ_DEFAULT_PASS=password
+    ports : 
+      - "5673:5672"
+
+  celery:
+    restart: always
+    hostname: celery
+    build:
+      context: ./
+    volumes:
+      - .:/daemon
+    depends_on:
+      - rabbitmq
+    command: origamid run_server
+

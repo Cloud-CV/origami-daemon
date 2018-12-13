@@ -26,6 +26,18 @@ $ celery -A origamid worker -l info
 $ origamid run_server
 ```
 
+### Installation with Docker :
+
+1. Clone the origami-daemon repository to your machine via git
+```
+git clone https://github.com/Cloud-CV/origami-daemon.git && cd origami-daemon
+```
+
+2. Then execute the following command: 
+```
+docker-compose up
+```
+
 ### Testing
 
 This project uses tox for testing purposes. To set up testing environment install test-requirements.txt
