@@ -14,6 +14,8 @@ $ cd origami-daemon
 $ virtualenv venv
 $ source venv/bin/activate
 $ pip install -e .
+or
+$ pip install -e git+https://github.com/Cloud-CV/origami-daemon.git#egg=Daemon
 
 # Start using origamid
 $ origamid
